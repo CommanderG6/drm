@@ -3516,8 +3516,11 @@ static int drmParsePlatformBusInfo(int maj, int min, drmPlatformBusInfoPtr info)
     snprintf(path, sizeof(path), "/sys/dev/char/%d:%d/device", maj, min);
 
     name = sysfs_uevent_get(path, "OF_FULLNAME");
-    if (!name)
-        return -ENOENT;
+    if (!name) {
+        name = sysfs_uevent_get(path, "DRIVER");
+        if (!name)
+            return -ENOENT;
+    }
 
     strncpy(info->fullname, name, DRM_PLATFORM_DEVICE_NAME_LEN);
     info->fullname[DRM_PLATFORM_DEVICE_NAME_LEN - 1] = '\0';
@@ -3542,7 +3545,7 @@ static int drmParsePlatformDeviceInfo(int maj, int min,
 
     value = sysfs_uevent_get(path, "OF_COMPATIBLE_N");
     if (!value)
-        return -ENOENT;
+        return 0;
 
     sscanf(value, "%u", &count);
     free(value);
